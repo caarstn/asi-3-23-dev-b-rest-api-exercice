@@ -1,0 +1,24 @@
+{
+  "type": "module",
+  "scripts": {
+    "nodemon": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "deepmerge-ts": "^5.0.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "knex": "^2.4.2",
+    "morgan": "^1.10.0",
+    "objection": "^3.0.1",
+    "pg": "^8.10.0",
+    "yup": "^1.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.36.0",
+    "eslint-config-prettier": "^8.7.0",
+    "nodemon": "^2.0.21",
+    "prettier": "^2.8.4"
+  }
+}
