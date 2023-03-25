@@ -5,10 +5,9 @@ export const up = async (knex) => {
     table.text("content").notNullable()
     table.text("urlSlug").notNullable().unique()
     table.integer("creator").references("id").inTable("users").notNullable()
-    table.text("modifyBy").notNullable()
-    table.datetime("pubishedAt").notNullable()
+    table.text("modifyBy")
     table.timestamps(true, true, true)
-    table.boolean("status").notNullable()
+    table.boolean("status").notNullable().default(false)
   })
 }
 

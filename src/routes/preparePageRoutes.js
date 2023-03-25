@@ -27,13 +27,13 @@ const preparePageRoutes = ({ app }) => {
     }),
     async (req, res) => {
       const {
-        body: { title, content, urlSlug },
+        body: { title, content, urlSlug, },
         session: { user: { id: userId },
         },
       } = req.locals
       const user = await UserModel.query().select("roleId").findById(userId)
 
-      if (user.roleId !== 1 || user.roleId !== 2) {
+      if (user.roleId !== 1 && user.roleId !== 2) {
         res.status(405).send({ error: "Forbidden" })
         
         return
@@ -41,7 +41,8 @@ const preparePageRoutes = ({ app }) => {
         const page = await PageModel.query().insert({
           title: title,
           content: content,
-          urlSlug: urlSlug, 
+          urlSlug: urlSlug,
+          creator: userId, 
         }).returning("*")
       
         res.send({ result: page })
