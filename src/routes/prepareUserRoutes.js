@@ -3,17 +3,17 @@ import validate from "../middlewares/validate.js"
 import hashPassword from "./../db/hashPassword.js"
 import auth from "../middlewares/authentication.js"
 import {
-  limitValidator, 
-  firstNameValidator, 
-  lastNameValidator, 
-  idValidator, 
+  limitValidator,
+  firstNameValidator,
+  lastNameValidator,
+  idValidator,
   emailValidator,
   passwordValidator,
-  stringValidator, 
-  pageValidator, 
-  orderFieldValidator, 
-  orderValidator, 
-  filterValidator, 
+  stringValidator,
+  pageValidator,
+  orderFieldValidator,
+  orderValidator,
+  filterValidator,
 } from "../validators.js"
 
 const prepareUserRoutes = ({ app }) => {
@@ -29,7 +29,7 @@ const prepareUserRoutes = ({ app }) => {
         role: stringValidator.required(),
       },
     }),
-    
+
     async (req, res) => {
       const {
         body: { lastName, firstName, email, password, role },
@@ -37,7 +37,9 @@ const prepareUserRoutes = ({ app }) => {
           user: { id: userId },
         },
       } = req.locals
-      const loggedUser = await UserModel.query().select("roleId").findById(userId)
+      const loggedUser = await UserModel.query()
+        .select("roleId")
+        .findById(userId)
 
       if (loggedUser.roleId !== 1) {
         res.status(405).send({ error: "Forbidden" })
@@ -45,14 +47,15 @@ const prepareUserRoutes = ({ app }) => {
         return
       } else {
         const [passwordHash, passwordSalt] = await hashPassword(password)
-        const newUser = await UserModel.query().insert({
-          lastName: lastName,
-          firstName:firstName,
-          email: email,
-          passwordHash: passwordHash,
-          passwordSalt: passwordSalt,
-          roleId: role,
-        })
+        const newUser = await UserModel.query()
+          .insert({
+            lastName: lastName,
+            firstName: firstName,
+            email: email,
+            passwordHash: passwordHash,
+            passwordSalt: passwordSalt,
+            roleId: role,
+          })
 
           .returning("*")
 
@@ -60,7 +63,7 @@ const prepareUserRoutes = ({ app }) => {
       }
     }
   )
-  
+
   app.get(
     "/users",
     auth,
@@ -76,14 +79,13 @@ const prepareUserRoutes = ({ app }) => {
         order: orderValidator.default("desc"),
         filterRole: filterValidator(["admin", "manager", "editor"]),
       }.orNull,
-      },
-    ),
+    }),
     async (req, res) => {
       const {
         body: { limit, page, orderField, order },
-        
+
         session: {
-          user: { id: userId }
+          user: { id: userId },
         },
       } = req.locals
 
@@ -91,7 +93,7 @@ const prepareUserRoutes = ({ app }) => {
 
       if (user.roleId !== 1) {
         res.status(405).send({ error: "Forbidden" })
-        
+
         return
       } else {
         const query = UserModel.query().page(page, limit)
@@ -100,11 +102,12 @@ const prepareUserRoutes = ({ app }) => {
           query.orderBy(orderField, order)
         }
 
-        const allUsers = await query 
+        const allUsers = await query
 
         res.send({ result: allUsers })
       }
-    })
+    }
+  )
   app.get(
     "/users/:userId",
     auth,
@@ -114,9 +117,14 @@ const prepareUserRoutes = ({ app }) => {
     async (req, res) => {
       const user = await UserModel.query().findById(req.params.userId)
       const { id: loggedUserId } = req.locals.session.user
-      const loggedUser = await UserModel.query().select("roleId").findById(loggedUserId)
+      const loggedUser = await UserModel.query()
+        .select("roleId")
+        .findById(loggedUserId)
 
-      if (loggedUser.roleId !== 1 || loggedUserId !== parseInt(req.params.userId)) {
+      if (
+        loggedUser.roleId !== 1 &&
+        loggedUserId !== parseInt(req.params.userId)
+      ) {
         res.status(405).send({ error: "Forbidden" })
 
         return
@@ -139,7 +147,7 @@ const prepareUserRoutes = ({ app }) => {
       body: {
         firstName: firstNameValidator,
         lastName: lastNameValidator,
-        password: passwordValidator, 
+        password: passwordValidator,
         email: emailValidator,
         role: stringValidator,
       },
@@ -153,10 +161,15 @@ const prepareUserRoutes = ({ app }) => {
         sessions: { user: userId },
       } = req.locals
 
-      const userRoleId = await UserModel.query().select("roleId").findById(userId)
+      const userRoleId = await UserModel.query()
+        .select("roleId")
+        .findById(userId)
       const userLogged = await UserModel.query().select("id").fintById(userId)
 
-      if (userLogged.roleId !== 1 || userRoleId !== parseInt(req.params.userId)) {
+      if (
+        userLogged.roleId !== 1 &&
+        userRoleId !== parseInt(req.params.userId)
+      ) {
         res.status(405).send({ error: "Forbidden" })
 
         return
@@ -167,24 +180,25 @@ const prepareUserRoutes = ({ app }) => {
           return
         }
 
-        const updatedUser = await UserModel.query().updateAndFetchById(userId, {
-          ...(firstName ? { firstName } : {}),
-          ...(lastName ? { lastName } : {}),
-          ...(password ? { password } : {}), 
-          ...(email ? { email } : {}),
-          ...(role ? { role } : {}),
-        })
-        
+        const updatedUser = await UserModel.query()
+          .updateAndFetchById(userId, {
+            ...(firstName ? { firstName } : {}),
+            ...(lastName ? { lastName } : {}),
+            ...(password ? { password } : {}),
+            ...(email ? { email } : {}),
+            ...(role ? { role } : {}),
+          })
+
           .where({
             id: req.params.userId,
           })
-          
-          .returning("*")
 
+          .returning("*")
 
         res.send({ result: updatedUser })
       }
-    })
+    }
+  )
 
   app.delete(
     "/users/:userId",
@@ -194,9 +208,11 @@ const prepareUserRoutes = ({ app }) => {
     }),
     async (req, res) => {
       const { userId } = req.locals.params
-      const userRoleId = await UserModel.query().select("roleId").findById(userId)
+      const userRoleId = await UserModel.query()
+        .select("roleId")
+        .findById(userId)
 
-      if (userRoleId.roleId !== 1 || userId !== parseInt(req.params.userId)) {
+      if (userRoleId.roleId !== 1 && userId !== parseInt(req.params.userId)) {
         res.status(405).send({ error: "Forbidden" })
 
         return
@@ -211,6 +227,7 @@ const prepareUserRoutes = ({ app }) => {
 
         res.send({ result: deletedUser })
       }
-    })
+    }
+  )
 }
 export default prepareUserRoutes

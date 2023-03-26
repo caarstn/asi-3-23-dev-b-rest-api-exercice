@@ -2,20 +2,17 @@ import jsonwebtoken from "jsonwebtoken"
 import config from "../config.js"
 import hashPassword from "../db/hashPassword.js"
 import validate from "../middlewares/validate.js"
-import {
-  emailValidator,
-  passwordValidator,
-} from "../validators.js"
+import { emailValidator, passwordValidator } from "../validators.js"
 
 const prepareSignRoutes = ({ app, db }) => {
   app.post(
-    "/sign-in", 
+    "/sign-in",
     validate({
       body: {
         email: emailValidator.required(),
         password: passwordValidator.required(),
-      }, 
-    }), 
+      },
+    }),
     async (req, res) => {
       const { email, password } = req.locals.body
       const [user] = await db("users").where({ email })

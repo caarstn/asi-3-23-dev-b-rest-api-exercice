@@ -4,7 +4,7 @@ import UserModel from "./UserModel.js"
 class RoleModel extends BaseModel {
   static tableName = "role"
 
-   static relationMappings() {
+  static relationMappings() {
     return {
       part: {
         relation: BaseModel.BelongsToOneRelation,

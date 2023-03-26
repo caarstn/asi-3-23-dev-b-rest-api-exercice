@@ -4,7 +4,7 @@ import auth from "../middlewares/authentication.js"
 import validate from "../middlewares/validate.js"
 import {
   boolValidator,
-  stringValidator, 
+  stringValidator,
   contentValidator,
   idValidator,
   limitValidator,
@@ -27,38 +27,42 @@ const preparePageRoutes = ({ app }) => {
     }),
     async (req, res) => {
       const {
-        body: { title, content, urlSlug, },
-        session: { user: { id: userId },
+        body: { title, content, urlSlug },
+        session: {
+          user: { id: userId },
         },
       } = req.locals
       const user = await UserModel.query().select("roleId").findById(userId)
 
       if (user.roleId !== 1 && user.roleId !== 2) {
         res.status(405).send({ error: "Forbidden" })
-        
+
         return
       } else {
-        const page = await PageModel.query().insert({
-          title: title,
-          content: content,
-          urlSlug: urlSlug,
-          creator: userId, 
-        }).returning("*")
-      
+        const page = await PageModel.query()
+          .insert({
+            title: title,
+            content: content,
+            urlSlug: urlSlug,
+            creator: userId,
+          })
+          .returning("*")
+
         res.send({ result: page })
       }
-    })
-  
+    }
+  )
+
   app.get(
     "/pages",
     auth,
     validate({
-      query: {
-        limmit: limitValidator,
-        page: pageValidator,
+      body: {
+        limit: limitValidator.required(),
+        page: pageValidator.required(),
         orderField: orderFieldValidator(["title", "content"]).default("title"),
         order: orderValidator.default("desc"),
-        status: boolValidator.default(true),
+        status: boolValidator,
       },
     }),
     async (req, res) => {
@@ -69,23 +73,29 @@ const preparePageRoutes = ({ app }) => {
         },
       } = req.locals
 
-      if (!userId && status === "draft") {
+      if (!userId && status === false) {
         res.status(405).send({ error: "Forbidden" })
 
         return
       }
-        
-      const query = PageModel.query().modify(limit, page)
 
-      if (status) {
-        query.whereNotNull("status")
+      const query = PageModel.query().page(page, limit)
+
+      if (!userId) {
+        query.where("status", true)
+      }
+
+      if (userId && status) {
+        query.where("status", status)
       }
 
       if (orderField) {
         query.orderBy(orderField, order)
       }
 
-      res.send({ result: query })
+      const pages = await query
+
+      res.send({ result: pages })
     }
   )
   app.get(
@@ -99,30 +109,23 @@ const preparePageRoutes = ({ app }) => {
     async (req, res) => {
       const { id: userId } = req.locals.session.user
 
-      const page = await PageModel.query().select("status").findById(req.params.pageId)
+      const page = await PageModel.query().findById(req.params.pageId)
 
-      if (!page.status) {
+      if (!page) {
         res.status(404).send({ error: "not found" })
 
         return
       }
 
-      if (page.status === "draft" && !userId) {
+      if (page.status === false && !userId) {
         res.status(405).send({ error: "Forbidden" })
 
         return
-      } else {
-        const pageResult = await PageModel.query().findById(req.params.pageId)
-
-        if (!pageResult) {
-          res.status(404).send({ error: "Not found" })
-
-          return
-        }
-
-        res.send({ result: pageResult })
       }
-    })
+
+      res.send({ result: page })
+    }
+  )
 
   app.patch(
     "/pages/:pageId",
@@ -168,7 +171,8 @@ const preparePageRoutes = ({ app }) => {
 
         res.send({ result: updatedPage })
       }
-    })
+    }
+  )
 
   app.delete(
     "/pages/:pageId",
@@ -179,8 +183,8 @@ const preparePageRoutes = ({ app }) => {
       },
     }),
     async (req, res) => {
-    const { id: userId } = req.locals.session.user
-    const user = await UserModel.query().select("roleId").findById(userId)
+      const { id: userId } = req.locals.session.user
+      const user = await UserModel.query().select("roleId").findById(userId)
 
       if (user.roleId !== 1 && user.roleId !== 2) {
         res.status(405).send({ error: "Forbidden" })
@@ -201,8 +205,8 @@ const preparePageRoutes = ({ app }) => {
 
         res.send({ result: deletedPage })
       }
-    })
+    }
+  )
 }
-
 
 export default preparePageRoutes

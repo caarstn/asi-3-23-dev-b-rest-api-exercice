@@ -4,7 +4,7 @@ import UserModel from "./UserModel.js"
 class PageModel extends BaseModel {
   static tableName = "pages"
 
-   static relationMappings() {
+  static relationMappings() {
     return {
       author: {
         relation: BaseModel.BelongsToOneRelation,
@@ -13,7 +13,7 @@ class PageModel extends BaseModel {
           from: "pages.creator",
           to: "users.id",
         },
-        modify: (query) => query.select("id", "displayName"),
+        modify: (query) => query.select("id", "firstName", "lastName"),
       },
     }
   }

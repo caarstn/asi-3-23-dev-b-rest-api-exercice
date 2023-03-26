@@ -3,14 +3,14 @@ import UserModel from "../db/models/UserModel.js"
 import auth from "../middlewares/authentication.js"
 import validate from "../middlewares/validate.js"
 import {
-  nameValidator, 
+  nameValidator,
   limitValidator,
   idValidator,
-  orderFieldValidator, 
-  orderValidator, 
+  orderFieldValidator,
+  orderValidator,
   pageValidator,
-  stringValidator, 
-  jsonValidator, 
+  stringValidator,
+  jsonValidator,
 } from "../validators.js"
 
 const prepareNavigationMenuRoutes = ({ app }) => {
@@ -20,7 +20,7 @@ const prepareNavigationMenuRoutes = ({ app }) => {
     validate({
       body: {
         name: nameValidator.required(),
-        pages: jsonValidator.required(), 
+        pages: jsonValidator.required(),
       },
     }),
     async (req, res) => {
@@ -44,15 +44,15 @@ const prepareNavigationMenuRoutes = ({ app }) => {
             pages: pages,
           })
           .returning("*")
-    
+
         res.send({ result: menu })
       }
-    })
+    }
+  )
 
-  
   app.get(
     "/menus",
-    auth, 
+    auth,
     validate({
       body: {
         limit: limitValidator.required(),
@@ -72,12 +72,12 @@ const prepareNavigationMenuRoutes = ({ app }) => {
       const menu = await query
 
       res.send({ result: menu })
-    })
-
+    }
+  )
 
   app.get(
     "/menus/:menuId",
-    auth, 
+    auth,
     validate({
       params: {
         menuId: idValidator.required(),
@@ -96,10 +96,9 @@ const prepareNavigationMenuRoutes = ({ app }) => {
     }
   )
 
-
   app.patch(
     "/menus/:menuId",
-    auth, 
+    auth,
     validate({
       body: {
         name: stringValidator,
@@ -124,7 +123,9 @@ const prepareNavigationMenuRoutes = ({ app }) => {
 
         return
       } else {
-        const menu = await NavigationMenuModel.query().findById(req.params.menuId)
+        const menu = await NavigationMenuModel.query().findById(
+          req.params.menuId
+        )
 
         if (!menu) {
           res.status(404).send({ error: "not found" })
@@ -144,9 +145,9 @@ const prepareNavigationMenuRoutes = ({ app }) => {
 
         res.send({ result: updatedMenu })
       }
-    })
-  
-  
+    }
+  )
+
   app.delete(
     "/menus/:menuId",
     auth,
@@ -165,7 +166,9 @@ const prepareNavigationMenuRoutes = ({ app }) => {
 
         return
       } else {
-        const menu = await NavigationMenuModel.query().findById(req.params.menuId) 
+        const menu = await NavigationMenuModel.query().findById(
+          req.params.menuId
+        )
 
         if (!menu) {
           res.status(404).send({ error: "not found" })
@@ -179,7 +182,8 @@ const prepareNavigationMenuRoutes = ({ app }) => {
 
         res.send({ result: deletedMenu })
       }
-    })
-  }
+    }
+  )
+}
 
-  export default prepareNavigationMenuRoutes
+export default prepareNavigationMenuRoutes
